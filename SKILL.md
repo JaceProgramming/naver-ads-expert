@@ -33,12 +33,16 @@ description: 네이버 광고(광고주센터 ads.naver.com) 전문가. 검색�
 
 ## 작업 순서
 
+> **경로 주의.** 아래 `$SKILL` 은 이 스킬이 로드될 때 함께 주어진 **base directory**(SKILL.md 가
+> 있는 절대 경로)다. 작업 디렉터리는 사용자의 프로젝트라서 `node scripts/search.mjs` 처럼
+> 상대 경로로 부르면 스크립트를 못 찾는다. 항상 절대 경로로 부른다.
+
 ```bash
-node scripts/search.mjs "<사용자 질문 또는 핵심 낱말>"
+node "$SKILL/scripts/search.mjs" "<사용자 질문 또는 핵심 낱말>"
 ```
 
 1. 위 명령으로 관련 문서 3~8건을 좁힌다 (전체 1148건 대상, 0.2초)
-2. 상위 문서를 **Read** 한다 — `references/faq/faq-NNNN.md`. 문서당 평균 2.6KB라 2~3개 읽어도 부담 없다
+2. 상위 문서를 **Read** 한다 — `$SKILL/references/faq/faq-NNNN.md`. 문서당 평균 2.6KB라 2~3개 읽어도 부담 없다
 3. 원문 근거로 답한다. 출처 번호와 `updated` 날짜 표기
 
 검색이 잘 안 걸리면 [검색 요령](#검색-요령)으로.
@@ -72,18 +76,19 @@ node scripts/search.mjs "<사용자 질문 또는 핵심 낱말>"
 `scripts/search.mjs` 는 제목·태그·카테고리·본문을 IDF 가중으로 훑고 한국어 조사(1글자)를 잘라 다시 시도한다. 그래도 안 걸릴 때:
 
 ```bash
-node scripts/search.mjs "쇼핑검색 미노출"                  # 상품명을 넣으면 정확도가 크게 오른다
-node scripts/search.mjs "입찰가"                           # 문장보다 짧은 낱말이 낫다
-node scripts/search.mjs "입찰" --cat "쇼핑검색"            # 카테고리로 좁히기
-node scripts/search.mjs --cat "광고 검토"                  # 질의 없이 훑기 (조회수 순)
-node scripts/search.mjs --tree                             # 카테고리 트리
-node scripts/search.mjs --show 189                         # 문서 전문 출력
-node scripts/search.mjs "환불" --json                      # 기계 판독용
+S="$SKILL/scripts/search.mjs"                # 아래는 $SKILL 을 실제 절대 경로로 바꿔 쓴다
+node "$S" "쇼핑검색 미노출"                   # 상품명을 넣으면 정확도가 크게 오른다
+node "$S" "입찰가"                            # 문장보다 짧은 낱말이 낫다
+node "$S" "입찰" --cat "쇼핑검색"             # 카테고리로 좁히기
+node "$S" --cat "광고 검토"                   # 질의 없이 훑기 (조회수 순)
+node "$S" --tree                              # 카테고리 트리
+node "$S" --show 189                          # 문서 전문 출력
+node "$S" "환불" --json                       # 기계 판독용
 ```
 
 - **상품명을 넣는 게 가장 효과가 크다.** "노출 안 됨"은 1100건이 걸리지만 "쇼핑검색 미노출"은 몇 건으로 좁혀진다.
-- 카테고리 지도는 `references/CATEGORIES.md` (189줄). 8개 대분류 / 153개 카테고리.
-- 전체 목록 `references/INDEX.md` 는 **226KB다. 통째로 Read 하지 말 것** — 컨텍스트만 태운다. grep 하거나 search.mjs 를 쓴다.
+- 카테고리 지도는 `$SKILL/references/CATEGORIES.md` (189줄). 8개 대분류 / 153개 카테고리.
+- 전체 목록 `$SKILL/references/INDEX.md` 는 **226KB다. 통째로 Read 하지 말 것** — 컨텍스트만 태운다. grep 하거나 search.mjs 를 쓴다.
 
 ## 원문을 읽을 때 알아둘 것
 
@@ -130,7 +135,7 @@ node scripts/search.mjs "환불" --json                      # 기계 판독용
 1. **상품을 먼저 확인한다.** 파워링크인지 쇼핑검색인지 디스플레이인지에 따라 완전히 다른 진단이다
 2. 해당 상품의 미노출 진단 문서를 검색해 읽는다
    ```bash
-   node scripts/search.mjs "<상품명> 노출되지 않는 경우 확인"
+   node "$SKILL/scripts/search.mjs" "<상품명> 노출되지 않는 경우 확인"
    ```
    상품별 진단 문서가 따로 있다 — 파워링크 `faq-0182`, 쇼핑검색 `faq-0245`·`faq-1487`, 디스플레이 `faq-1491`
 3. 원문의 점검 항목을 **순서대로** 짚는다. 네이버가 정리한 순서에는 이유가 있다 (돈이 없으면 검토가 안 되고, 검토가 안 되면 노출이 안 된다)
