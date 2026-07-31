@@ -1,0 +1,7 @@
+node_modules/
+
+# fetch-faq.mjs 를 OUT 없이 부르면 여기에 쓴다. 정본은 references/faq/ 다.
+tools/out/
+tools/package-lock.json
+
+.DS_Store

@@ -1,0 +1,17 @@
+{
+  "name": "naver-ads-expert-tools",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "네이버 광고주센터 도움말 원문 재수집 도구",
+  "scripts": {
+    "list": "node fetch-faq.mjs --list",
+    "tree": "node fetch-faq.mjs --tree",
+    "refresh": "OUT=../references/faq node fetch-faq.mjs && node build-index.mjs"
+  },
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "turndown": "^7.2.0",
+    "turndown-plugin-gfm": "^1.0.2"
+  }
+}

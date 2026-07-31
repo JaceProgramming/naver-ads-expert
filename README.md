@@ -1,0 +1,213 @@
+# naver-ads-expert
+
+**네이버 광고 전문가 AI 스킬.**
+Claude·Cursor 등 AI 에이전트에 설치하면, 네이버 광고주센터 공식 도움말 **1148건 원문**을 근거로
+파워링크·쇼핑검색광고·브랜드검색·디스플레이광고(ADVoost)를 다룬다.
+
+> A Claude Skill that turns any AI agent into a Naver Ads expert, grounded in all 1,148 official
+> Naver Advertiser Center help documents.
+
+Claude Code에서는 플러그인으로 **두 줄이면 설치**된다 → [설치](#설치)
+
+---
+
+## 왜 필요한가
+
+AI에게 "네이버 광고 봐줘"라고 하면 잘 틀린다. 세 가지가 겹쳐서 그렇다.
+
+**1. 광고주센터가 개편됐다.** 예전 `searchad.naver.com` "광고시스템" 기준으로 안내하면
+사용자는 그 화면을 못 찾는다. 지금은 `ads.naver.com` 광고주센터로 검색광고·디스플레이광고·
+스마트스토어광고가 합쳐져 있다.
+
+**2. "네이버 광고"는 단일 상품이 아니다.** 상품마다 규칙이 전혀 다르다.
+
+| | 키워드 등록 | 과금 | 노출 순위 |
+|---|---|---|---|
+| **파워링크** | 직접 등록 | 클릭당 | 검색어–콘텐츠 연관성 + 입찰가 + 소재 품질 → 상위 10개 |
+| **쇼핑검색광고** | **등록 안 함** (상품정보 자동 매칭) | 클릭당 | 입찰가 + 품질지수 → 최대 100위, 영역별 1~40개 |
+| **브랜드검색** | 계약 시 선택 | **정액제 선지불** | 경매가 아님 (계약) |
+
+"광고가 안 나와요"의 답이 상품마다 다르다. 상품을 안 물어보고 답하면 절반은 헛다리다.
+
+**3. 용어가 계속 새로 생긴다.** **최적화 지표**(광고 연관지수 / 클릭 기대지수), **ADVoost** 같은
+개념은 최근에 들어왔다. 학습 데이터에 있을 리 없다.
+
+이 스킬은 추측 대신 **1148건에서 검색해 원문을 읽고, 출처 번호를 밝히며** 답하도록 만든다.
+
+## 무엇이 들어있나
+
+```
+SKILL.md                  스킬 본문 — 상품 지도, 절대 규칙, 워크플로
+.claude-plugin/           Claude Code 플러그인 매니페스트 (이 저장소 = 마켓플레이스)
+scripts/
+  search.mjs              1148건 랭킹 검색 (의존성 0, Node 18+)
+references/
+  CATEGORIES.md           카테고리 지도 (8개 대분류 / 153개 카테고리)
+  INDEX.md                전체 문서 목록 (226KB)
+  faq/                    네이버 공식 도움말 원문 1148건 (Markdown)
+tools/
+  fetch-faq.mjs           원문 재수집
+  build-index.mjs         재수집 후 색인·카테고리 지도 재생성
+```
+
+각 원문은 front matter 에 `faq_seq` · `category` · `source`(원문 URL) · `tags` ·
+`updated`(네이버가 명시한 수정일) · `read_count` 를 갖는다. **수집 시점: 2026년 7월 31일.**
+
+이미지는 내려받지 않고 네이버 서버 URL을 그대로 참조한다. 저장소 크기는 약 3MB.
+
+## 설치
+
+### Claude Code (권장) — 플러그인
+
+이 저장소가 곧 마켓플레이스다. **실행 중인 Claude Code 세션의 입력창에** 아래 두 줄을 차례로 친다.
+(터미널이 아니라 Claude Code 안이다. `>` 프롬프트가 뜬 상태에서 `/`로 시작하는 명령이다.)
+
+```
+/plugin marketplace add JaceProgramming/naver-ads-expert
+```
+```
+/plugin install naver-ads-expert@naver-ads-expert
+```
+
+`/plugin` 명령이 목록에 없으면 Claude Code가 구버전이다. `claude update` 로 올린 뒤 다시 시도한다.
+
+<details>
+<summary>터미널에서 설치하기 (Claude Code를 안 켜고)</summary>
+
+```bash
+claude plugin marketplace add JaceProgramming/naver-ads-expert
+claude plugin install naver-ads-expert@naver-ads-expert
+```
+</details>
+
+**설치 확인** — 세션에서 `/plugin` 을 열면 `naver-ads-expert` 가 enabled 로 보인다.
+목록에 안 뜨면 `/reload-plugins` 또는 세션 재시작.
+
+설치하면 네이버 광고 관련 질문에서 **자동으로 활성화**된다.
+`/naver-ads-expert` 로 직접 부를 수도 있다.
+
+<details>
+<summary>플러그인 대신 스킬로 직접 설치하기</summary>
+
+```bash
+git clone https://github.com/JaceProgramming/naver-ads-expert.git \
+  ~/.claude/skills/naver-ads-expert
+```
+
+프로젝트 단위로만 쓰려면 `<프로젝트>/.claude/skills/naver-ads-expert` 에 클론한다.
+설치 후 `/skills` 로 확인할 수 있다. 업데이트는 `git pull`.
+
+> 같은 이름의 플러그인을 이미 설치했다면 **플러그인이 우선하고 이쪽은 로드되지 않는다.**
+> 둘 중 하나만 쓴다.
+</details>
+
+### Claude 앱 (claude.ai / 데스크톱)
+
+1. 이 저장소를 zip으로 내려받는다 ([Code → Download ZIP](https://github.com/JaceProgramming/naver-ads-expert/archive/refs/heads/main.zip))
+2. 압축을 풀고, `SKILL.md`가 최상위에 있는 폴더째로 다시 압축한다
+3. Settings → Capabilities → Skills → Upload
+
+### 그 외 AI 도구 (Cursor, Windsurf, Copilot 등)
+
+스킬 형식을 지원하지 않아도 된다. 저장소를 클론한 뒤 **`SKILL.md`를 컨텍스트에 넣고,
+`references/faq/`를 읽을 수 있게** 해주면 동일하게 동작한다.
+
+## 사용
+
+설치하면 관련 질문에서 자동으로 활성화된다.
+
+```
+파워링크 광고가 며칠째 노출이 안 됩니다. 뭘 확인해야 하나요?
+```
+```
+쇼핑검색광고 노출 순위는 어떻게 결정되나요? 입찰가를 올리면 되나요?
+```
+```
+브랜드검색 하려는데 비용이 얼마나 드나요?
+```
+```
+광고 검토에서 반려됐는데 사유를 모르겠어요
+```
+```
+비즈머니 환불받으려면 어떻게 하나요?
+```
+
+### 검색 스크립트 단독 실행
+
+AI 없이도 쓸 수 있다. 의존성 없이 Node 18+ 만 있으면 된다.
+
+```bash
+node scripts/search.mjs "파워링크 노출 순위"           # 랭킹 검색
+node scripts/search.mjs "입찰" --cat "쇼핑검색"        # 카테고리 안에서만
+node scripts/search.mjs --cat "광고 검토"              # 질의 없이 훑기 (조회수 순)
+node scripts/search.mjs --tree                         # 카테고리 트리
+node scripts/search.mjs --show 189                     # 문서 전문 출력
+node scripts/search.mjs "환불" --json                  # 기계 판독용
+```
+
+<details>
+<summary>출력 예시</summary>
+
+```
+"파워링크 노출 순위" — 806건 중 상위 2건
+
+ 1. faq-0189.md  파워링크 네이버 통합검색에 광고가 노출되는 순위는 어떻게 결정되나요?
+      광고 운영 > 입찰 > 입찰 전략 · 수정 2026-03-30 · 조회 26,157
+      태그: 노출순서·노출순위·순위·파워링크순위·품질지수
+      … 검색어와 사이트 콘텐츠의 연관성, 입찰가(자동입찰), 소재 품질 등의 종합적인 「순위」…
+
+ 2. faq-0253.md  쇼핑 노출 순위는 어떻게 결정되나요?
+      광고 운영 > 입찰 > 입찰 전략 · 수정 2026-03-30 · 조회 59,090
+      태그: 쇼핑검색광고 순위·노출 순위
+      … 쇼핑검색광고는 소재 입찰가와 품질지수를 고려하여 노출「순위」를 산정합니다…
+```
+</details>
+
+한국어는 띄어쓰기로 형태소가 갈리지 않아 토크나이저 없이는 정확히 자를 수 없다. 그래서
+**부분 문자열 매칭**(한국어 합성어는 붙여 쓰므로 "입찰가"가 "입찰가변경"에 걸린다),
+**조사 1글자 절삭**("광고가" → "광고"), **IDF 가중**(거의 모든 문서에 있는 "네이버"·"광고"는
+가중치가 0에 수렴 — 불용어 목록을 손으로 관리하지 않아도 된다)을 조합했다.
+
+## 원문 갱신
+
+네이버가 도움말을 고치면 다시 받을 수 있다.
+
+```bash
+cd tools
+npm install
+npm run list      # 목록·수정일만 확인 (네트워크 1회)
+npm run refresh   # references/faq/ 전량 재수집 + 색인·카테고리 지도 재생성
+```
+
+> ⚠️ 전량 수집은 **약 1300회 요청**(목록 1 + 트리 156 + 본문 1148)이다. 동시 요청은 4로 맞춰
+> 두었으니 `CONCURRENCY` 를 올리지 말 것. 공개 문서 열람 목적의 예의다.
+
+`npm run list` 의 수정일을 현재 `references/INDEX.md` 와 비교하면 변경된 문서만 골라낼 수 있다.
+특정 문서만 다시 받으려면 `OUT=../references/faq node fetch-faq.mjs --only 189,253`.
+
+> 부분 수집(`--only` / `--limit` / `--since`)은 `INDEX.md` 를 덮어쓰지 않는다. 전체 목록을 담을 수
+> 없기 때문이다. 부분 수집 후에는 `node build-index.mjs` 만으로 색인이 맞지 않을 수 있으니,
+> 목차까지 정확히 맞추려면 전량을 다시 돌린다.
+
+## 한계
+
+- 이 스킬은 **공식 도움말에 적힌 것만** 안다. 네이버 광고 랭킹 알고리즘은 공개되어 있지 않다.
+- **업종별 평균 CPC·CTR·ROAS 벤치마크는 이 문서 집합에 없다.** 없다고 답하도록 되어 있다.
+- 계정 잔액·검토 상태·실제 노출 순위는 **사용자만 볼 수 있다.** 스킬은 광고주센터에 접근하지 않는다.
+- 문서 1148건 중 **367건(32%)은 네이버가 AI로 작성한 `[AI작성]` 문서**다. 공식 문서이긴 하나
+  대체로 화면 조작 절차 서술이라, 스킬은 같은 주제에 사람이 쓴 문서가 있으면 그쪽을 우선한다.
+- 수집 시점은 2026년 7월 31일이다. **금액·정책은 그 뒤로 바뀌었을 수 있다** — 각 문서의
+  `source` URL로 확인할 것.
+
+## 라이선스
+
+- **스킬 지침·스크립트** (`SKILL.md`, `scripts/`, `tools/`, `README.md`) — [MIT](LICENSE)
+- **`references/faq/` 원문** — 저작권은 네이버(주)에 있다. 학습·참조 목적의 재배포이며,
+  각 파일은 원문 URL을 `source` 로 보존한다. 자세한 내용은 [NOTICE.md](NOTICE.md).
+
+이 프로젝트는 네이버(주)와 무관하며 공식 제공물이 아니다.
+
+## 기여
+
+원문 갱신 PR, 오답 신고, 검색 품질 개선 환영. 다만 **공식 도움말에 근거가 없는 "네이버 광고 꿀팁"은
+받지 않는다** — 이 스킬의 존재 이유가 그것이기 때문이다.

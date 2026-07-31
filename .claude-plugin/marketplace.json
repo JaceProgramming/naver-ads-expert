@@ -1,0 +1,31 @@
+{
+  "name": "naver-ads-expert",
+  "owner": {
+    "name": "JaceProgramming",
+    "url": "https://github.com/JaceProgramming"
+  },
+  "metadata": {
+    "description": "네이버 광고주센터 공식 도움말 1148건 원문 기반 네이버 광고 스킬",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "naver-ads-expert",
+      "source": "./",
+      "description": "네이버 광고(광고주센터) 전문가. 검색광고(파워링크·쇼핑검색·파워컨텐츠·브랜드검색·플레이스)·디스플레이광고(ADVoost)·스마트스토어광고의 등록, 입찰가, 과금, 광고 검토, 미노출 진단, 비즈머니/결제를 네이버 공식 도움말 1148건 원문으로 답한다. Naver Ads expert for Korean search and display advertising.",
+      "version": "1.0.0",
+      "author": {
+        "name": "JaceProgramming"
+      },
+      "keywords": [
+        "naver",
+        "naver-ads",
+        "korean",
+        "advertising",
+        "powerlink",
+        "advoost"
+      ],
+      "category": "productivity"
+    }
+  ]
+}
