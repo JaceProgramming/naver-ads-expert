@@ -22,6 +22,7 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const FAQ_DIR = path.resolve(HERE, '..', 'references', 'faq');
+const UPDATES_FILE = path.resolve(HERE, '..', 'references', 'UPDATES.md');
 
 // ── 인자 파싱 ────────────────────────────────────────────────────────────────
 const argv = process.argv.slice(2);
@@ -98,7 +99,36 @@ tools/ 에서 재수집하세요:  cd tools && npm install && npm run refresh`);
   );
 }
 
+// ── 최근 공지 (references/UPDATES.md) ────────────────────────────────────────
+//
+// FAQ 원문은 스냅샷이라 그 뒤 공지로 바뀐 내용을 모른다. UPDATES.md 가 그 틈을 메운다.
+//   · "| faq-NNNN | 바뀐 내용 | ..." 표 행 → 그 문서가 결과에 나오면 ⚠ 를 붙인다
+//   · "## YYYY-MM-DD · 제목" 섹션   → 검색어가 걸리면 결과 맨 위에 띄운다
+// 파일이 없어도 검색은 그대로 동작한다.
+async function loadUpdates() {
+  const out = { overrides: new Map(), entries: [] };
+  let src;
+  try {
+    src = await readFile(UPDATES_FILE, 'utf8');
+  } catch {
+    return out;
+  }
+  for (const m of src.matchAll(/^\|\s*faq-(\d+)\s*\|\s*(.+?)\s*\|/gm)) {
+    out.overrides.set(Number(m[1]), m[2]);
+  }
+  const parts = src.split(/^## /m).slice(1);
+  for (const p of parts) {
+    const nl = p.indexOf('\n');
+    const heading = p.slice(0, nl).trim();
+    if (!/^\d{4}-\d{2}-\d{2}/.test(heading)) continue; // 표·출처 섹션은 제외
+    const body = p.slice(nl + 1).split(/^---$/m)[0];
+    out.entries.push({ heading, body, lc: (heading + '\n' + body).toLowerCase() });
+  }
+  return out;
+}
+
 const docs = await load();
+const updates = await loadUpdates();
 for (const d of docs) {
   d.lcTitle = d.title.toLowerCase();
   d.lcCat = d.category.toLowerCase();
@@ -119,6 +149,9 @@ if (opt.show) {
     process.exit(1);
   }
   console.log(await readFile(path.join(FAQ_DIR, d.file), 'utf8'));
+  if (updates.overrides.has(d.seq)) {
+    console.log(`\n⚠ 이 문서는 이후 공지로 바뀐 부분이 있다 (references/UPDATES.md):\n  ${updates.overrides.get(d.seq)}`);
+  }
   process.exit(0);
 }
 
@@ -165,6 +198,7 @@ if (!query) {
   for (const d of list) {
     console.log(`  ${d.file}  ${d.title}`);
     console.log(`      ${d.category} · 수정 ${d.updated} · 조회 ${d.reads.toLocaleString()}`);
+    if (updates.overrides.has(d.seq)) console.log(`      ⚠ 공지로 바뀐 부분 있음 — references/UPDATES.md`);
   }
   process.exit(0);
 }
@@ -254,12 +288,52 @@ scored.sort((a, b) => b.score - a.score);
 const top = scored.slice(0, opt.limit);
 
 function strip(d) {
-  return { file: d.file, seq: d.seq, title: d.title, category: d.category, tags: d.tags, updated: d.updated, source: d.source, read_count: d.reads };
+  const o = { file: d.file, seq: d.seq, title: d.title, category: d.category, tags: d.tags, updated: d.updated, source: d.source, read_count: d.reads };
+  if (updates.overrides.has(d.seq)) o.notice_override = updates.overrides.get(d.seq);
+  return o;
 }
+
+// 최근 공지 매칭 — 카테고리 필터와 무관하게 전체 문서 기준 IDF 로 잰다.
+// FAQ 에 한 번도 안 나오는 말(예: "애즈 어시스턴트")은 공지에만 있는 새 개념이라 가중치를 최대로 준다.
+const gCache = new Map();
+function globalWeight(form) {
+  if (gCache.has(form)) return gCache.get(form);
+  let df = 0;
+  for (const d of docs) {
+    if (d.lcTitle.includes(form) || d.lcTags.includes(form) || d.lcBody.includes(form)) df++;
+  }
+  const v = Math.log(docs.length / Math.max(df, 1));
+  gCache.set(form, v);
+  return v;
+}
+// "파워링크"(≈1)·"순위"처럼 흔한 말 몇 개로는 안 걸리고, FAQ 에 드문 말 하나나 제목 일치면 걸리는 정도
+const UPDATE_MIN = 3;
+const updateHits = updates.entries
+  .map((e) => {
+    const lcHead = e.heading.toLowerCase();
+    // 제목에 있는 말은 그 공지의 주제라 두 배로 센다
+    const w = (f) => (e.lc.includes(f) ? globalWeight(f) * (lcHead.includes(f) ? 2 : 1) : 0);
+    let s = 0;
+    for (const t of terms) {
+      let best = w(t);
+      if (t.length >= 3 && JOSA.test(t)) best = Math.max(best, w(t.slice(0, -1)) * 0.6);
+      s += best;
+    }
+    return { e, s };
+  })
+  .filter((x) => x.s >= UPDATE_MIN)
+  .sort((a, b) => b.s - a.s)
+  .slice(0, 3);
 
 if (opt.json) {
   console.log(JSON.stringify(top.map((r) => ({ ...strip(r.d), score: Number(r.score.toFixed(2)) })), null, 2));
   process.exit(0);
+}
+
+if (updateHits.length) {
+  console.log(`최근 공지 (FAQ 스냅샷 이후 · references/UPDATES.md) — FAQ 원문보다 이쪽이 최신이다\n`);
+  for (const { e } of updateHits) console.log(`  ▶ ${e.heading}`);
+  console.log(`\n  읽기: references/UPDATES.md 의 해당 "## " 항목\n`);
 }
 
 if (!top.length) {
@@ -296,6 +370,7 @@ top.forEach((r, i) => {
   if (d.tags.length) console.log(`      태그: ${d.tags.join('·')}`);
   const s = snippet(d, r.hits);
   if (s) console.log(`      ${s}`);
+  if (updates.overrides.has(d.seq)) console.log(`      ⚠ 이후 공지로 바뀜: ${updates.overrides.get(d.seq)}`);
   console.log('');
 });
 console.log(`원문 읽기:  references/faq/<파일명>   또는  node scripts/search.mjs --show <번호>`);

@@ -1,7 +1,7 @@
 {
   "name": "naver-ads-expert",
-  "description": "네이버 광고(광고주센터 ads.naver.com) 전문가. 검색광고(파워링크·쇼핑검색·파워컨텐츠·브랜드검색·신제품검색·플레이스), 디스플레이광고(ADVoost), 스마트스토어광고의 등록·입찰가·과금·예산·타겟팅·광고 검토·미노출 진단·비즈채널·비즈머니·결제/환불/세금계산서·성과보고서를 다룰 때 사용한다. \"네이버 광고가 노출이 안 돼요\", \"파워링크 입찰가 얼마로?\", \"광고 검토 반려\", \"쇼핑검색광고 순위\", \"비즈머니 환불\" 같은 요청에 활성화. 네이버 공식 도움말 1148건 원문을 근거로 답한다. Naver Ads (advertiser center) expert for Korean search and display advertising.",
-  "version": "1.0.0",
+  "description": "네이버 광고(네이버애즈 N Ads, 구 광고주센터 · ads.naver.com) 전문가. 검색광고(파워링크·쇼핑검색·파워컨텐츠·브랜드검색·신제품검색·플레이스), 디스플레이광고(ADVoost), 스마트스토어광고의 등록·입찰가·과금·예산·타겟팅·광고 검토·미노출 진단·비즈채널·비즈머니·결제/환불/세금계산서·성과보고서를 다룰 때 사용한다. \"네이버 광고가 노출이 안 돼요\", \"파워링크 입찰가 얼마로?\", \"광고 검토 반려\", \"쇼핑검색광고 순위\", \"비즈머니 환불\" 같은 요청에 활성화. 네이버 공식 도움말 1148건 원문과 이후 공지 요약(네이버애즈 개편 등)을 근거로 답한다. Naver Ads (advertiser center) expert for Korean search and display advertising.",
+  "version": "1.1.0",
   "author": {
     "name": "JaceProgramming"
   },
