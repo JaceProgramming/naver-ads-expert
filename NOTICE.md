@@ -33,6 +33,8 @@
 - `tools/fetch-faq.mjs` — 수집 스크립트
 - `tools/build-index.mjs` — 색인·카테고리 지도 생성
 - `README.md`, `NOTICE.md`, `references/CATEGORIES.md`, `references/INDEX.md`
+- `references/UPDATES.md` — 네이버 광고 공지사항(<https://ads.naver.com/notice>)의 변경 내용을 이 프로젝트가
+  요약·정리한 것. 원문 전재가 아니며, 각 항목에 공지 URL과 확인한 2차 출처를 밝힌다.
 
 ## 상표
 
